@@ -7,6 +7,9 @@ eval {
   require AnyData;
 };
 die "Use must download and install AnyData before you can install DBD::AnyData!" if $@;
+
+=pod
+
 undef $@;
 eval {
   require XML::Parser;
@@ -21,6 +24,7 @@ eval {
 };
 push @formats,'HTMLtable' unless $@;
 
+=cut
 
 for my $driver('DBD::AnyData') {
   print "\n$driver\n";
@@ -84,7 +88,7 @@ sub test_dbd {
  return "Failed multiple select" unless "SueTom" eq $val{select_multiple};
  $sth = $dbh->prepare('SELECT * FROM test');           # display column names
  $sth->execute();
- $val{names} = join ',',@{$sth->{NAME}};
+ $val{names} = join ',',@{$sth->{NAME_lc}};
  return "Failed names" unless "name,country,sex" eq $val{names};
  $val{rows}  = $sth->rows;                             # display number of rows
  return "Failed rows" unless 2 == $val{rows};

@@ -6,6 +6,12 @@ Documentation and most recent version available at:
 
 Revision history for Perl extension AnyData.
 
+version 0.06, released 25 August 2003
+
+ prepare()   : added caching of parser
+ Makefile.PL : added prereqs, (thx Scott Godin and Intrepid)
+ test.pl     : changes $sth->{NAME} to $th->{NAME_lc}, omitted XML & HTML tests
+
 version 0.05, released 17 July, 2001
 
  There are major changes in the way the tied hash interface

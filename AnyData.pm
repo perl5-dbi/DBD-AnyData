@@ -25,7 +25,7 @@ require SQL::Eval;
 
 use vars qw($VERSION $err $errstr $sqlstate $drh $ramdata);
 
-$VERSION = '0.05';
+$VERSION = '0.06';
 
 $err       = 0;        # holds error code   for DBI::err
 $errstr    = "";       # holds error string for DBI::errstr
@@ -120,10 +120,26 @@ sub prepare ($$;@) {
 	$@ = '';
 	my $class = $sth->FETCH('ImplementorClass');
 	$class =~ s/::st$/::Statement/;
-        my $parser = SQL::Parser->new('SQL::Eval');
-        $parser->feature("select","join",1);
+	my($stmt);
+        my $sversion = $SQL::Statement::VERSION;
+	if ($SQL::Statement::VERSION > 1) {
+            my $parser = $dbh->{ad_sql_parser_object};
+            eval { $parser ||= $dbh->func('ad_cache_sql_parser_object') };
+            if ($@) {
+                undef $@;
+  	        $stmt = eval { $class->new($statement) };
+	    }
+            else {
+  	        $stmt = eval { $class->new($statement,$parser) };
+	    }
+        }
+        else {
+	    $stmt = eval { $class->new($statement) };
+	}
+        # my $parser = SQL::Parser->new('SQL::Eval');
+        # $parser->feature("select","join",1);
+	# my($stmt) = eval { $class->new($statement,$parser) };
 
-	my($stmt) = eval { $class->new($statement,$parser) };
 	if ($@) {
 	    DBI::set_err($dbh, 1, $@);
 	    undef $sth;
@@ -137,12 +153,28 @@ sub prepare ($$;@) {
     $sth;
 }
 
+sub disconnect{ $DBD::AnyData::ramdata = {};}
+
 
 #
 # DRIVER PRIVATE METHODS
 #
 
-sub disconnect{ $DBD::AnyData::ramdata = {};}
+sub ad_cache_sql_parser_object {
+    my $dbh = shift;
+    my $parser = {
+            dialect    => 'AnyData',
+            RaiseError => $dbh->FETCH('RaiseError'),
+            PrintError => $dbh->FETCH('PrintError'),
+        };
+    my $sql_flags  = $dbh->FETCH('ad_sql') || {};
+    %$parser = (%$parser,%$sql_flags);
+    $parser = SQL::Parser->new($parser->{dialect},$parser);
+    $dbh->{ad_sql_parser_object} = $parser;
+    return $parser;
+}
+
+
 
 sub ad_mod_catalog {
     my( $self, $tname, $key, $value) =@_;
