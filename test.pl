@@ -1,9 +1,30 @@
 #!/usr/local/bin/perl -w
 $|++;
 use strict;
+BEGIN { unshift @INC, '/htdocs/a/my_lib' }
+my @formats = qw(CSV Pipe Tab Fixed Paragraph ARRAY);
+eval {
+  require AnyData;
+};
+die "Use must download and install AnyData before you can install DBD::AnyData!" if $@;
+undef $@;
+eval {
+  require XML::Parser;
+  require XML::Twig;
+};
+unshift @formats,'XML' unless $@;
+undef $@;
+eval {
+  require HTML::Parser;
+  require HTML::TableExtract;
+  require CGI;
+};
+push @formats,'HTMLtable' unless $@;
+
+
 for my $driver('DBD::AnyData') {
   print "\n$driver\n";
-  for my $format(qw(XML CSV Pipe Tab Fixed Paragraph HTMLtable ARRAY)) {
+  for my $format(@formats) {
       printf  "  %10s ... ", $format;
       printf "%s!\n" , test($driver,$format);
   }

@@ -25,7 +25,7 @@ require SQL::Eval;
 
 use vars qw($VERSION $err $errstr $sqlstate $drh $ramdata);
 
-$VERSION = '0.03';
+$VERSION = '0.05';
 
 $err       = 0;        # holds error code   for DBI::err
 $errstr    = "";       # holds error string for DBI::errstr
@@ -109,6 +109,34 @@ package DBD::AnyData::db; # ====== DATABASE ======
 $DBD::AnyData::db::imp_data_size = 0;
 
 @DBD::AnyData::db::ISA = qw(DBD::File::db);
+require SQL::Statement;
+sub prepare ($$;@) {
+    my($dbh, $statement, @attribs)= @_;
+
+    # create a 'blank' dbh
+    my $sth = DBI::_new_sth($dbh, {'Statement' => $statement});
+
+    if ($sth) {
+	$@ = '';
+	my $class = $sth->FETCH('ImplementorClass');
+	$class =~ s/::st$/::Statement/;
+        my $parser = SQL::Parser->new('SQL::Eval');
+        $parser->feature("select","join",1);
+
+	my($stmt) = eval { $class->new($statement,$parser) };
+	if ($@) {
+	    DBI::set_err($dbh, 1, $@);
+	    undef $sth;
+	} else {
+	    $sth->STORE('f_stmt', $stmt);
+	    $sth->STORE('f_params', []);
+	    $sth->STORE('NUM_OF_PARAMS', scalar($stmt->params()));
+	}
+    }
+
+    $sth;
+}
+
 
 #
 # DRIVER PRIVATE METHODS
@@ -169,11 +197,15 @@ sub ad_export {
     }
     else {
 #z      $data = $dbh->func($table_name,'ad_get_catalog')->{records};
+       my $sth = $dbh->prepare("SELECT * FROM $table_name WHERE 1=0");
+       $sth->execute;
         $data = $catalog->{ad}->{storage}->{records};
-#use Data::Dumper; print Dumper $catalog->{ad}->{storage}->{records};
     } 
-       $data = $dbh->selectall_arrayref("SELECT * FROM $table_name") if $format eq 'XML';
-#use Data::Dumper; print Dumper $dbh->func( $table_name,'ad_get_catalog');
+       $data = $dbh->selectall_arrayref("SELECT * FROM $table_name") 
+          if $format =~ /XML|HTMLtable/;
+#use Data::Dumper;
+#die Dumper $data;
+# print Dumper $dbh->func( $table_name,'ad_get_catalog');
 
       my $newcols = $dbh->func( $table_name,'ad_get_catalog'
 			       )->{ad}->{storage}->{col_names};
@@ -217,6 +249,9 @@ sub ad_import {
     my @params = $flags->{params} || ();
     if ( 'XML HTMLtable' =~ /$format/) {
         $dbh->func($table_name,$format,$file_name,$flags,'ad_catalog');
+        my $sth= $dbh->prepare("SELECT * FROM $table_name WHERE 1=0");
+        $sth->execute;
+        $sth->finish;
         return unless $old_catalog;
     }
     elsif (ref($file_name) ) {
@@ -1098,6 +1133,12 @@ You can also import columns from several different formats into a single table. 
  $dbh->func( 'test', 'CSV',  [$csvStr],  'ad_import');
  $dbh->func( 'test', 'Pipe', [$pipeStr], 'ad_import');
 
+When you import more than one table into a single table like this, the resulting table will be a cross join unless you supply a lookup_key flag.  If a lookup_key is supplied, then a the resulting table will be a full outer join on that key column.  This feature is experimental for the time being but should work as expected unless there are columns other than the key column with the same names in the various tables.  You can specify that the joined table will only contain certain columns by creating a blank empty table before doing the imports.  You can specify only certain rows with the sql flag.  For example:
+
+  $dbh->func('test','ARRAY',[],{col_names=>'foo,bar'baz'}, 'ad_import');
+  $dbh->func('test','XML',$file1,{lookup_key=>'baz'},'ad_import');
+  $dbh->func('test','CSV',$file1,{lookup_key=>'baz'},'ad_import');
+
 DBD::AnyData does not currently support using multiple tables in a
 single SQL statement.  However it does support using multiple tables
 and querying them separately with different SQL statements.  This
@@ -1150,9 +1191,9 @@ handle.  Like this:
 
      $dbh->func( $table, $format, $data, $flags, 'ad_import');
 
-     $dbh->func( $source_format, $source_data, 
-                 $target_format, $target_file, 
-                 $source_flags,  $target_flags, 
+     $dbh->func( $source_format, $source_data,
+                 $target_format, $target_file,
+                 $source_flags,  $target_flags,
      'ad_convert');
 
      $dbh->func( $table, $format, $file, $flags, 'ad_export');
@@ -1209,9 +1250,10 @@ any DBI accessible database, perl arrayrefs, perl strings.
 
  Import From   all formats, all sources
  Convert From  all formats, all sources
- Convert To    all formats except DBI, local files or strings only
- Export To     all formats except DBI, local files or strings only
- Catalog       all formats except DBI, XML, HTMLtable, Mp3, local files only
+ Convert To    all formats except DBI, local files, arrays or strings only
+ Export To     all formats except DBI, local files, arrays or strings only
+ Catalog       all formats except DBI, XML, HTMLtable, Mp3, ARRAY,
+               local files only
 
 =head2 connect
 
@@ -1393,9 +1435,10 @@ The DBI->connect call
  source of a conversion, but not as the target of a conversion.
 
  The format 'ARRAY' may be used to indicate that the source of the
- conversion is a reference to an array.  (See above, working with
- in-memory database for information on the structure of the array
- reference).
+ conversion is a reference to an array.  Or that the result of the
+ conversion should be returned as an array reference.  (See above, 
+ working with in-memory database for information on the structure of
+ the array reference).
 
 
 =head2 Data Sources
@@ -1533,7 +1576,7 @@ The DBI->connect call
 
 =head1 ACKNOWLEDGEMENTS
 
-Many people have contributed ideas and code, found bugs, and generally been supportive including Tom Lowery, Andy Duncan, Randal Schwartz, Michel Rodriguez, Wes Hardraker, Bob Starr, Earl Cahill, Bryan Fife, Matt Sisk, Mathew Wickline, Wolfgang Weisseberg.  Thanks to Jochen Weidmann for DBD::File and SQL::Statement and of course Tim Bunce and Alligator Descartes for DBI and its documentation.
+Many people have contributed ideas and code, found bugs, and generally been supportive including Tom Lowery, Andy Duncan, Randal Schwartz, Michel Rodriguez, Wes Hardraker, Bob Starr, Earl Cahill, Bryan Fife, Matt Sisk, Matthew Wickline, Wolfgang Weisseberg.  Thanks to Jochen Weidmann for DBD::File and SQL::Statement and of course Tim Bunce and Alligator Descartes for DBI and its documentation.
 
 =head1 AUTHOR & COPYRIGHT
 

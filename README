@@ -46,6 +46,11 @@ WHAT THE HECK IS IT?
   The module also supports converting files between any of the supported
   formats (e.g. save selected data from MySQL or Oracle to an XML file).
 
+  HISTORICAL NOTE: this module was formerly called DBD::RAM.  Its name
+  was changed because many people were unaware that the module supports
+  file operations in addition to in-memory operations.  See the Changes
+  file for a description of changes since the last release of DBD::RAM.
+
 SOME EXAMPLES
 
   # SELECT DATA FROM A PASSWD FILE
