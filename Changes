@@ -1,0 +1,24 @@
+DBD::AnyData - DBI access to XML,CSV and other data
+
+Changes from DBD::RAM to DBD::AnyData
+
+  * streamlined interface, faster operations
+
+  * now supports new formats: HTMLtable, Passwd, Weblog, Paragraph
+
+  * import() now supports SELECT (import only the columns and rows
+    you specify) and joining multiple tables into a single table
+
+  * a new convert() method allows one-step conversion between any
+    of the supported formats
+
+  * additional support for remote files including authentication
+
+  * additional support for XML including greatly improved export()
+    and use of the document's DTD for both importing and exporting
+
+Gotchas in moving from DBD::RAM to DBD::AnyData
+
+  * the func() methods now all start with ad_, thus ad_catalog instead
+    of catalog
+
