@@ -24,9 +24,9 @@ use base qw( DBD::File );
 require SQL::Statement;
 require SQL::Eval;
 
-use vars qw($VERSION $err $errstr $sqlstate $drh $ramdata $methods_already_installed);
+use vars qw($VERSION $err $errstr $sqlstate $drh $methods_already_installed);
 
-$VERSION = '0.07';
+$VERSION = '0.08';
 
 $err       = 0;        # holds error code   for DBI::err
 $errstr    = "";       # holds error string for DBI::errstr
@@ -99,10 +99,10 @@ sub connect {
         } elsif ($var =~ /(.*?)=(.*)/) {
             my $key = $1;
             my $val = $2;
-#            $dbh->STORE($key, $val);
-            $dbh->{$key}= $val;
+            $dbh->STORE($key, $val);
         }
     }
+    $dbh->STORE('Active',1);
     ### $dbh->func('read_catalog_from_disk');
     }
     $dbh;
@@ -114,9 +114,13 @@ sub data_sources {
    @dirs = map { s/DBI:AnyData:f_dir=//; $_} @dirs;
 }
 
-sub disconnect_all{  $DBD::AnyData::ramdata = {};}
+sub disconnect_all{ 
+    shift->{ad_tables}={};
+}
 
-sub DESTROY { $DBD::AnyData::ramdata = {} }
+sub DESTROY { 
+    shift->{ad_tables}={};
+}
 
 package DBD::AnyData::db; # ====== DATABASE ======
 
@@ -168,7 +172,12 @@ sub prepare ($$;@) {
     $sth;
 }
 
-sub disconnect{ $DBD::AnyData::ramdata = {};}
+sub disconnect{
+    my $dbh = shift;
+    $dbh->{ad_tables}={};
+    $dbh->STORE('Active',0);
+    return 1;
+}
 
 
 #
@@ -193,17 +202,17 @@ sub ad_cache_sql_parser_object {
 
 sub ad_mod_catalog {
     my( $self, $tname, $key, $value) =@_;
-    $DBD::AnyData::ramdata->{catalog}{$tname}->{$key}=$value;
+    $self->{ad_tables}->{$tname}->{$key}=$value;
 }
 
 sub ad_clear {
     my $self  = shift;
     my $tname = shift;
-    if ($tname eq 'all') {
-       $DBD::AnyData::ramdata->{catalog}={};
+    if ($tname eq 'all' or $tname eq '') {
+       $self->{ad_tables}={};
     }
     else {
-        delete $DBD::AnyData::ramdata->{catalog}{$tname};
+        delete $self->{ad_tables}->{$tname};
     }
 }
 
@@ -213,14 +222,13 @@ sub ad_get_catalog {
     #################################################################
     # Patch from Wes Hardaker
     #################################################################
-    # return $DBD::AnyData::ramdata->{catalog}{$tname} if $tname;
     if ($tname) {
- 	return $DBD::AnyData::ramdata->{catalog}{$tname}
-   	  if ($DBD::AnyData::ramdata->{catalog}{$tname});
-	return $DBD::AnyData::ramdata->{catalog}{__default};
+ 	return $self->{ad_tables}->{$tname}
+   	  if ($self->{ad_tables}->{$tname});
+	return $self->{ad_tables}->{__default};
     }
     #################################################################
-    return $DBD::AnyData::ramdata->{catalog};
+    return $self->{ad_tables};
 }
 sub ad_export {
     my $dbh    = shift;
@@ -415,9 +423,7 @@ sub ad_catalog {
         $flags->{file_name} ||= '';
         $flags->{eol}       ||= "\n";
         $flags->{f_dir}     ||= $dbh->{f_dir};
-	#use Data::Dumper; print Dumper $flags;
-        $DBD::AnyData::ramdata->{catalog}{$table_name} = $flags;
-	#use Data::Dumper; die Dumper $flags;
+        $dbh->{ad_tables}->{$table_name} = $flags;
     }
 }
 
@@ -477,7 +483,11 @@ sub table_info ($) {
 	$sth;
 }
 
-sub DESTROY { $DBD::AnyData::ramdata = {};}
+sub DESTROY {
+    my $dbh = shift;
+    $dbh->{ad_tables}={};
+    $dbh->STORE('Active',0);
+}
 
 package DBD::AnyData::st; # ====== STATEMENT ======
 

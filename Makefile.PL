@@ -11,7 +11,7 @@ my %opts = (
     'PREREQ_PM'    => {
                         'SQL::Statement' => '1',
                         'DBD::File'      => '0.22',
-                        'AnyData'        => '0.06',
+                        'AnyData'        => '0.07',
                         'DBI'            => '1',
                       },
     'dist'         => { 'SUFFIX'       => ".gz",
