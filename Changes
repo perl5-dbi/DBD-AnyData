@@ -1,10 +1,24 @@
 DBD::AnyData - DBI access to XML,CSV and other data
 
-Documentation and most recent version available at:
+Revision history for Perl extension DBD::AnyData.
 
-    http://www.vpservices.com/jeff/programs/AnyData/
+version 0.07, released 15 March 2004
 
-Revision history for Perl extension AnyData.
+ * fixed problem with DBD::File-0.03 STORE
+   (thanks to Dan Wright for bug report)
+
+ * fixed ad_import with DBI and keep_connection flag to operate according
+   to the docs (when set, allows you to keep a connection)
+   (thanks to Dan Wright for bug report)
+
+ * fixed func() calls so they can optionally be called without func()
+   if you have DBI version 1.37 or higher, for example these are the same:
+
+     $dbh->ad_dump('SELECT * FROM old');
+     $dbh->func('SELECT * FROM old','ad_dump');
+
+   this also applies to ad_import(), ad_convert(), ad_catalog(),
+   ad_export() and ad_clear()
 
 version 0.06, released 25 August 2003
 

@@ -19,13 +19,14 @@ package DBD::AnyData;
 
 use strict;
 use AnyData;
-require DBD::File;
+#require DBD::File;
+use base qw( DBD::File );
 require SQL::Statement;
 require SQL::Eval;
 
-use vars qw($VERSION $err $errstr $sqlstate $drh $ramdata);
+use vars qw($VERSION $err $errstr $sqlstate $drh $ramdata $methods_already_installed);
 
-$VERSION = '0.06';
+$VERSION = '0.07';
 
 $err       = 0;        # holds error code   for DBI::err
 $errstr    = "";       # holds error string for DBI::errstr
@@ -33,10 +34,9 @@ $sqlstate  = "";       # holds SQL state for    DBI::state
 $drh       = undef;    # holds driver handle once initialized
 
 sub driver {
-    return $drh if $drh;        # already created - return same one
     my($class, $attr) = @_;
-    $class .= "::dr";
-    $drh = DBI::_new_drh($class, {
+    return $drh if $drh;        # already created - return same one
+    my $this = $class->SUPER::driver({
         'Name'    => 'AnyData',
         'Version' => $VERSION,
         'Err'     => \$DBD::AnyData::err,
@@ -44,9 +44,20 @@ sub driver {
         'State'   => \$DBD::AnyData::sqlstate,
         'Attribution' => 'DBD::AnyData by Jeff Zucker',
     });
-    return $drh;
+    if ( $DBI::VERSION >= 1.37 and !$methods_already_installed++ ) {
+        DBD::AnyData::db->install_method('ad_import');
+        DBD::AnyData::db->install_method('ad_catalog');
+        DBD::AnyData::db->install_method('ad_convert');
+        DBD::AnyData::db->install_method('ad_export');
+        DBD::AnyData::db->install_method('ad_clear');
+        DBD::AnyData::db->install_method('ad_dump');
+    }
+    return $this;
 }
 
+sub CLONE {
+    undef $drh;
+}
 package DBD::AnyData::dr; # ====== DRIVER ======
 
 $DBD::AnyData::dr::imp_data_size = 0;
@@ -64,6 +75,7 @@ sub connect {
     # Process attributes from the DSN; we assume ODBC syntax
     # here, that is, the DSN looks like var1=val1;...;varN=valN
     my $var;
+    if ($dbh) {
     $dbh->STORE('f_dir','./');
     foreach $var (split(/;/, $dbname)) {
         #######################################################
@@ -87,10 +99,12 @@ sub connect {
         } elsif ($var =~ /(.*?)=(.*)/) {
             my $key = $1;
             my $val = $2;
-            $dbh->STORE($key, $val);
+#            $dbh->STORE($key, $val);
+            $dbh->{$key}= $val;
         }
     }
     ### $dbh->func('read_catalog_from_disk');
+    }
     $dbh;
 }
 
@@ -110,6 +124,7 @@ $DBD::AnyData::db::imp_data_size = 0;
 
 @DBD::AnyData::db::ISA = qw(DBD::File::db);
 require SQL::Statement;
+
 sub prepare ($$;@) {
     my($dbh, $statement, @attribs)= @_;
 
@@ -351,7 +366,7 @@ sub ad_import {
     }
     $cols = $old_columns if $old_columns;
     unshift @$records, $cols unless $flags->{col_names};
-    $dbh2->disconnect if $format eq 'DBI';
+    $dbh2->disconnect if $format eq 'DBI' and !$flags->{keep_connection};
     $file_name = '' if ref($file_name) eq 'ARRAY';
     delete $flags->{recs};
     delete $flags->{storage};
