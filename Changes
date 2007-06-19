@@ -2,7 +2,11 @@ DBD::AnyData - DBI access to XML,CSV and other data
 
 Revision history for Perl extension DBD::AnyData.
 
-version 0.07, released 18 April 2004
+version 0.09 released 15 June 2007
+
+* finally fixed the "cleared while still active" bug
+
+version 0.08, released 18 April 2004
 
  * now sets $dbh->{Active} on with $dbh->connect and off
    with $dbh->disconnect; this allows it to work with

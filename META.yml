@@ -1,0 +1,14 @@
+# http://module-build.sourceforge.net/META-spec.html
+#XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
+name:         DBD-AnyData
+version:      0.09
+version_from: AnyData.pm
+installdirs:  site
+requires:
+    AnyData:                       0.07
+    DBD::File:                     0.22
+    DBI:                           1
+    SQL::Statement:                1
+
+distribution_type: module
+generated_by: ExtUtils::MakeMaker version 6.30_01

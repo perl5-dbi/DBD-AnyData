@@ -26,7 +26,7 @@ require SQL::Eval;
 
 use vars qw($VERSION $err $errstr $sqlstate $drh $methods_already_installed);
 
-$VERSION = '0.08';
+$VERSION = '0.09';
 
 $err       = 0;        # holds error code   for DBI::err
 $errstr    = "";       # holds error string for DBI::errstr
@@ -494,9 +494,9 @@ package DBD::AnyData::st; # ====== STATEMENT ======
 $DBD::AnyData::st::imp_data_size = 0;
 @DBD::AnyData::st::ISA = qw(DBD::File::st);
 
-sub DESTROY ($) { undef; }
+# sub DESTROY ($) { undef; }
 
-sub finish ($) {}
+# sub finish ($) {}
 
 package DBD::AnyData::Statement;
 
