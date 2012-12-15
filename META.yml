@@ -1,12 +1,15 @@
 ---
 abstract: 'DBI access to XML, CSV and other formats'
 author:
-  - 'Jens Rehsack <rehsack@cpan.org>'
+  - 'Copyright 2000, Jeff Zucker L<jeff@vpservices.com>'
+  - 'Copyright 2010, Jens Rehsack L<rehsack@cpan.org>'
+  - 'Copyright 2012, Sven Dowideit L<SvenDowideit@fosiki.com>'
 build_requires:
   Test::More: 0.9
 configure_requires:
-  Module::Build: 0.36
-generated_by: 'Module::Build version 0.3607'
+  Module::Build: 0.38
+dynamic_config: 1
+generated_by: 'Module::Build version 0.38, CPAN::Meta::Converter version 2.120921'
 license: perl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -15,17 +18,22 @@ name: DBD-AnyData
 provides:
   DBD::AnyData:
     file: lib/DBD/AnyData.pm
-    version: 0.110
+    version: 0.12
   DBD::AnyData::Statement:
     file: lib/DBD/AnyData.pm
+    version: 0
   DBD::AnyData::Table:
     file: lib/DBD/AnyData.pm
+    version: 0
   DBD::AnyData::db:
     file: lib/DBD/AnyData.pm
+    version: 0
   DBD::AnyData::dr:
     file: lib/DBD/AnyData.pm
+    version: 0
   DBD::AnyData::st:
     file: lib/DBD/AnyData.pm
+    version: 0
 recommends:
   AnyData: 0.10
   DBI: 1.612
@@ -38,4 +46,4 @@ requires:
   SQL::Statement: 1.27_02
 resources:
   license: http://dev.perl.org/licenses/
-version: 0.110
+version: 0.12

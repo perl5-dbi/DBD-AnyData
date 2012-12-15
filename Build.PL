@@ -5,10 +5,11 @@ use Module::Build;
 my $builder = Module::Build->new(
     module_name       => 'DBD::AnyData',
     license           => 'perl',
-    dist_author       => q{Jens Rehsack <rehsack@cpan.org>},
+    #author       => [ q{Jens Rehsack <rehsack@cpan.org>}, q{Sven Dowideit <SvenDowideit@fosiki.com>} ],
+    author_from => 'lib/DBD/AnyData.pm',
     dist_version_from => 'lib/DBD/AnyData.pm',
     resources         => {
-                   repository  => 'https://svn.perl.org/modules/DBD-AnyData/branches/0.1x-SqlEngine',
+                   repository  => 'https://github.com/SvenDowideit/DBD-AnyData',
                    MailingList => 'mailto:dbi-dev@perl.org',
                    license     => 'http://dev.perl.org/licenses/',
                  },

@@ -2,6 +2,11 @@ DBD::AnyData - DBI access to XML,CSV and other data
 
 Revision history for Perl extension DBD::AnyData.
 
+version 0.120 release 
+
+* new maintainer Sven Dowideit
+* fixes ...
+
 version 0.110 release 17th July 2010
 
 * new maintainer Jens Rehsack

@@ -28,7 +28,7 @@ require SQL::Eval;
 
 use vars qw($VERSION $err $errstr $sqlstate $drh $methods_already_installed);
 
-$VERSION = '0.110';
+$VERSION = '0.12';
 
 $err      = 0;        # holds error code   for DBI::err
 $errstr   = "";       # holds error string for DBI::errstr
@@ -1739,28 +1739,6 @@ You can find documentation for this module with the perldoc command.
 
   perldoc DBD::AnyData
 
-You can also look for information at:
-
-=over 4
-
-=item * RT: CPAN's request tracker
-
-L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=DBD-AnyData>
-
-=item * AnnoCPAN: Annotated CPAN documentation
-
-L<http://annocpan.org/dist/DBD-AnyData>
-
-=item * CPAN Ratings
-
-L<http://cpanratings.perl.org/d/DBD-AnyData>
-
-=item * Search CPAN
-
-L<http://search.cpan.org/dist/DBD-AnyData/>
-
-=back
-
 =head1 ACKNOWLEDGEMENTS
 
 Many people have contributed ideas and code, found bugs, and generally
@@ -1770,11 +1748,13 @@ Matthew Wickline, Wolfgang Weisseberg.  Thanks to Jochen Weidmann for
 DBD::File and SQL::Statement and of course Tim Bunce and Alligator
 Descartes for DBI and its documentation.
 
-=head1 AUTHOR & COPYRIGHT
+=head1 AUTHORS
 
-Copyright 2000, Jeff Zucker <jeff@vpservices.com>
+Copyright 2000, Jeff Zucker L<jeff@vpservices.com>
 
-Copyright 2010, Jens Rehsack <rehsack@cpan.org>
+Copyright 2010, Jens Rehsack L<rehsack@cpan.org>
+
+Copyright 2012, Sven Dowideit L<SvenDowideit@fosiki.com>
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of either: the GNU General Public License as published
