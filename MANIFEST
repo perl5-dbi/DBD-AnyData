@@ -1,7 +1,12 @@
-AnyData.pm
+Build.PL
 Changes
+lib/DBD/AnyData.pm
 Makefile.PL
 MANIFEST
+MANIFEST.SKIP
+META.yml
 README
-test.pl
-META.yml                                 Module meta-data (added by MakeMaker)
+t/00-load.t
+t/01-basic.t
+t/manifest.t
+t/pod.t
